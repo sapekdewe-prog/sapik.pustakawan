@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Katalog Barang Bekas - ThriftMarket{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Hero Banner Bersih & Minimalis -->
+    <div class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 rounded-3xl p-8 sm:p-12 text-white shadow-xl relative overflow-hidden">
+        <div class="max-w-2xl relative z-10">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-400/30 mb-4">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Platform Jual Beli Terverifikasi
+            </span>
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Temukan Barang Bekas Berkualitas, Siap Diantar ke Rumah.</h1>
+            <p class="mt-3 text-slate-300 text-sm sm:text-base">Mulai dari gadget, outfit vintage hingga otomotif dengan harga miring langsung dari pemiliknya.</p>
+        </div>
+    </div>
+
+    <!-- Filter & Pencarian -->
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <form method="GET" action="{{ url_for('marketplace.index') }}" class="flex flex-col md:flex-row gap-4">
+            <div class="flex-1 relative">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5"></i>
+                <input type="text" name="q" value="{{ query }}" placeholder="Cari jaket vintage, iPhone, velg..."
+                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm">
+            </div>
+
+            <div class="w-full md:w-56">
+                <select name="category" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm bg-white">
+                    <option value="">Semua Kategori</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <label class="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 text-xs font-medium text-slate-700">
+                <input type="checkbox" name="delivery_only" value="1" {% if delivery_only =='1' %}checked{% endif %} class="rounded text-blue-600 focus:ring-blue-500">
+                <span>Khusus Jasa Antar</span>
+            </label>
+
+            <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 shadow-sm transition">
+                Cari
+            </button>
+        </form>
+    </div>
+
+    <!-- Grid Produk Bekas -->
+    <div>
+        <div class="flex justify-between items-center mb-5">
+            <h2 class="text-xl font-bold text-slate-900">Etalase Barang Terbaru</h2>
+            <span class="text-xs text-slate-500">Menampilkan {{ products|length }} barang</span>
+        </div>
+
+        {% if products %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {% for item in products %}
+                <a href="{{ url_for('marketplace.product_detail', product_id=item.id) }}" class="group bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition duration-200 flex flex-col">
+                    <div class="relative aspect-square w-full bg-slate-100 overflow-hidden">
+                        <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" 
+                             alt="{{ item.title }}"
+                             onerror="this.src='https://placehold.co/400x400?text=Foto+Barang'"
+                             class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                        <span class="absolute top-3 left-3 text-[11px] font-semibold bg-white/90 backdrop-blur-md text-slate-800 px-2.5 py-1 rounded-md shadow-sm">
+                            {{ item.condition }}
+                        </span>
+                        {% if item.offers_delivery %}
+                            <span class="absolute bottom-3 left-3 text-[10px] font-bold bg-blue-600 text-white px-2 py-0.5 rounded shadow-sm flex items-center gap-1">
+                                <i data-lucide="truck" class="w-3 h-3"></i> Bisa Diantar
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                            <span class="text-[11px] font-semibold text-blue-600 uppercase tracking-wider">{{ item.category }}</span>
+                            <h3 class="font-bold text-slate-900 text-sm mt-1 line-clamp-2 group-hover:text-blue-600 transition">{{ item.title }}</h3>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                            <span class="text-base font-extrabold text-slate-900">Rp {{ "{:,}".format(item.price) }}</span>
+                            <span class="text-xs text-slate-400 font-medium">{{ item.seller.name }}</span>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+                <i data-lucide="package-search" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
+                <p class="text-slate-700 font-bold">Barang tidak ditemukan</p>
+                <p class="text-xs text-slate-400 mt-1">Coba gunakan kata kunci pencarian lain atau hilangkan filter.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

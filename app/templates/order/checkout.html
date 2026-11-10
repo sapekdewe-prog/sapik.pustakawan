@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% block title %}Checkout Pesanan - ThriftMarket{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+    <div class="flex items-center justify-between">
+        <a href="{{ url_for('marketplace.product_detail', product_id=product.id) }}" class="text-xs font-semibold text-slate-500 hover:text-blue-600 inline-flex items-center gap-1.5 transition">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i> Kembali ke Detail Barang
+        </a>
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Konfirmasi Pemesanan</span>
+    </div>
+
+    <form method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Kolom Kiri: Form Pengiriman & Catatan -->
+        <div class="md:col-span-2 space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h2 class="text-base font-bold text-slate-900">Pilih Metode Pengiriman</h2>
+
+                <div class="space-y-3">
+                    {% if product.offers_delivery %}
+                    <label class="flex items-start gap-3 p-3.5 rounded-xl border border-blue-200 bg-blue-50/40 cursor-pointer hover:border-blue-400 transition">
+                        <input type="radio" name="delivery_method" value="seller_delivery" id="method_delivery" checked
+                               class="mt-1 text-blue-600 focus:ring-blue-500">
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                                    <i data-lucide="truck" class="w-4 h-4 text-blue-600"></i> Jasa Antar ke Rumah
+                                </span>
+                                <span class="text-xs font-bold text-blue-700">Rp {{ "{:,}".format(product.delivery_fee) }}</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-0.5">Penjual/kurir toko akan langsung mengantarkan barang sampai depan rumah.</p>
+                        </div>
+                    </label>
+                    {% endif %}
+
+                    <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-white cursor-pointer hover:border-slate-400 transition">
+                        <input type="radio" name="delivery_method" value="pickup" id="method_pickup" {% if not product.offers_delivery %}checked{% endif %}
+                               class="mt-1 text-blue-600 focus:ring-blue-500">
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                                    <i data-lucide="map-pin" class="w-4 h-4 text-slate-600"></i> Ambil Sendiri (Pickup)
+                                </span>
+                                <span class="text-xs font-bold text-emerald-600">Gratis (Rp 0)</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-0.5">Ambil langsung ke lokasi penjual sesuai alamat yang tertera di profil toko.</p>
+                        </div>
+                    </label>
+                </div>
+
+                <div id="address_container" class="space-y-2 pt-2">
+                    <label class="block text-xs font-bold uppercase text-slate-700">Alamat Pengantaran Tujuan</label>
+                    <textarea name="shipping_address" id="shipping_address" rows="3" required
+                        placeholder="Tuliskan nama jalan, patokan rumah, RT/RW, atau nomor rumah lengkap..."
+                        class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 text-xs">{{ current_user.address or '' }}</textarea>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold uppercase text-slate-700">Catatan Khusus untuk Penjual (Opsional)</label>
+                    <input type="text" name="notes" placeholder="Contoh: Tolong kabari via WA sebelum jalan ke rumah"
+                        class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 text-xs">
+                </div>
+            </div>
+        </div>
+
+        <!-- Kolom Kanan: Rincian Tagihan -->
+        <div class="space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h2 class="text-base font-bold text-slate-900">Ringkasan Pesanan</h2>
+
+                <div class="flex gap-3 pb-4 border-b border-slate-100">
+                    <img src="{{ url_for('static', filename='uploads/' + product.image_filename) }}" 
+                         alt="{{ product.title }}"
+                         onerror="this.src='https://placehold.co/100x100?text=Barang'"
+                         class="w-14 h-14 object-cover rounded-lg border border-slate-200">
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-900 line-clamp-1">{{ product.title }}</h3>
+                        <span class="text-[11px] text-slate-500 block">Kondisi: {{ product.condition }}</span>
+                        <span class="text-xs font-bold text-blue-600">Rp {{ "{:,}".format(product.price) }}</span>
+                    </div>
+                </div>
+
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between text-slate-600">
+                        <span>Harga Barang</span>
+                        <span class="font-semibold text-slate-800">Rp {{ "{:,}".format(product.price) }}</span>
+                    </div>
+                    <div class="flex justify-between text-slate-600">
+                        <span>Ongkos Jasa Antar</span>
+                        <span id="display_delivery_fee" class="font-semibold text-slate-800">
+                            {% if product.offers_delivery %}Rp {{ "{:,}".format(product.delivery_fee) }}{% else %}Rp 0{% endif %}
+                        </span>
+                    </div>
+                    <div class="pt-3 border-t border-slate-200 flex justify-between items-center text-sm">
+                        <span class="font-bold text-slate-900">Total Pembayaran</span>
+                        <span id="display_total_price" class="font-extrabold text-blue-700">
+                            {% if product.offers_delivery %}
+                                Rp {{ "{:,}".format(product.price + product.delivery_fee) }}
+                            {% else %}
+                                Rp {{ "{:,}".format(product.price) }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i> Buat Pesanan Sekarang
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const itemPrice = { productprice };
+    const deliveryFee = {productdelivery_feeifproductoffers_deliveryelse0 };
+    
+    const radioDelivery = document.getElementById('method_delivery');
+    const radioPickup = document.getElementById('method_pickup');
+    const displayFee = document.getElementById('display_delivery_fee');
+    const displayTotal = document.getElementById('display_total_price');
+    const addressInput = document.getElementById('shipping_address');
+
+    function formatRupiah(number) {
+        return 'Rp ' + number.toLocaleString('id-ID');
+    }
+
+    function updateTotal() {
+        if (radioDelivery && radioDelivery.checked) {
+            displayFee.innerText = formatRupiah(deliveryFee);
+            displayTotal.innerText = formatRupiah(itemPrice + deliveryFee);
+            addressInput.setAttribute('required', 'required');
+        } else {
+            displayFee.innerText = 'Rp 0';
+            displayTotal.innerText = formatRupiah(itemPrice);
+            addressInput.removeAttribute('required');
+        }
+    }
+
+    if (radioDelivery) radioDelivery.addEventListener('change', updateTotal);
+    if (radioPickup) radioPickup.addEventListener('change', updateTotal);
+</script>
+{% endblock %}

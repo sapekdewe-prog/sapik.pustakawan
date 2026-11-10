@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% block title %}Pesanan Saya - ThriftMarket{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-sm gap-4">
+        <div>
+            <h1 class="text-xl font-bold text-slate-900">Riwayat Pesanan Saya</h1>
+            <p class="text-xs text-slate-500 mt-1">Pantau status kurir pengantaran atau beri ulasan pada pesanan yang sudah sampai.</p>
+        </div>
+        <a href="{{ url_for('marketplace.index') }}" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition inline-flex items-center gap-1.5">
+            <i data-lucide="shopping-bag" class="w-4 h-4"></i> Belanja Lagi
+        </a>
+    </div>
+
+    {% if orders %}
+        <div class="space-y-4">
+            {% for o in orders %}
+            <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+                <!-- Header Pesanan -->
+                <div class="flex flex-wrap items-center justify-between border-b border-slate-100 pb-3 gap-2">
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="font-bold text-slate-900">Pesanan #{{ o.id }}</span>
+                        <span class="text-slate-400">•</span>
+                        <span class="text-slate-500">{{ o.created_at.strftime('%d %b %Y, %H:%M') }}</span>
+                    </div>
+
+                    <!-- Badge Status Pengiriman -->
+                    <div>
+                        {% if o.status == 'pending' %}
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Menunggu Konfirmasi</span>
+                        {% elif o.status == 'confirmed' %}
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">Sedang Disiapkan</span>
+                        {% elif o.status == 'in_delivery' %}
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">Sedang Diantar Kurir</span>
+                        {% elif o.status == 'completed' %}
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Selesai Diterima</span>
+                        {% else %}
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Dibatalkan</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Konten Barang & Info Toko -->
+                <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                    <div class="flex gap-3">
+                        <img src="{{ url_for('static', filename='uploads/' + o.product.image_filename) }}"
+                             alt="{{ o.product.title }}"
+                             onerror="this.src='https://placehold.co/100x100?text=Barang'"
+                             class="w-16 h-16 object-cover rounded-xl border border-slate-200">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 line-clamp-1">{{ o.product.title }}</h3>
+                            <p class="text-xs text-slate-500 mt-0.5">Penjual: <b class="text-slate-700">{{ o.seller.name }}</b></p>
+                            <span class="text-[11px] font-medium text-slate-600 block mt-1">
+                                Metode: {% if o.delivery_method == 'seller_delivery' %}<span class="text-blue-600 font-semibold">Jasa Antar ke Rumah</span>{% else %}Ambil Sendiri (Pickup){% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="text-left sm:text-right">
+                        <span class="text-[11px] text-slate-400 block">Total Tagihan</span>
+                        <span class="text-sm font-extrabold text-blue-600">Rp {{ "{:,}".format(o.total_price) }}</span>
+                    </div>
+                </div>
+
+                <!-- Aksi: Chat WA & Form Ulasan Bintang -->
+                <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        {% if o.seller.phone %}
+                            {% set wa_msg = "Halo " + o.seller.name + ", saya ingin konfirmasi pesanan #" ~ o.id ~ " untuk barang " + o.product.title %}
+                            <a href="https://wa.me/{{ o.seller.phone|replace(' ', '')|replace('-', '') }}?text={{ wa_msg|urlencode }}"
+                               target="_blank"
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-xs font-semibold transition">
+                                <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> Hubungi Penjual via WA
+                            </a>
+                        {% endif %}
+                    </div>
+
+                    <!-- Bagian Review Pembeli -->
+                    <div>
+                        {% if o.status == 'completed' %}
+                            {% if o.review %}
+                                <div class="flex items-center gap-1 text-amber-500 text-xs font-bold bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200">
+                                    <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i> Ulasan Anda: {{ o.review.rating }}/5
+                                </div>
+                            {% else %}
+                                <form method="POST" action="{{ url_for('order.submit_review', order_id=o.id) }}" class="flex items-center gap-2">
+                                    <select name="rating" required class="text-xs border border-slate-300 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 font-medium">
+                                        <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                                        <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                                        <option value="3">⭐⭐⭐ (3/5)</option>
+                                        <option value="2">⭐⭐ (2/5)</option>
+                                        <option value="1">⭐ (1/5)</option>
+                                    </select>
+                                    <input type="text" name="comment" required placeholder="Tulis ulasan barang..." class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 w-44 sm:w-56 focus:outline-none focus:ring-1 focus:ring-blue-600">
+                                    <button type="submit" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition">
+                                        Kirim
+                                    </button>
+                                </form>
+                            {% endif %}
+                        {% else %}
+                            <span class="text-[11px] text-slate-400 italic">Ulasan dapat diberikan setelah pesanan berstatus selesai.</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+            <i data-lucide="shopping-cart" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
+            <h3 class="text-slate-700 font-bold text-base">Belum Ada Pesanan</h3>
+            <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">Anda belum pernah memesan barang bekas. Jelajahi etalase untuk menemukan barang yang Anda butuhkan.</p>
+            <div class="mt-4">
+                <a href="{{ url_for('marketplace.index') }}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition inline-flex items-center gap-1.5">
+                    <i data-lucide="search" class="w-4 h-4"></i> Cari Barang Bekas
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

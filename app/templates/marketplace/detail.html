@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}{{ product.title }} - ThriftMarket{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+    <a href="{{ url_for('marketplace.index') }}" class="text-xs font-semibold text-slate-500 hover:text-blue-600 inline-flex items-center gap-1.5 transition">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i> Kembali ke Katalog
+    </a>
+
+    <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm grid grid-cols-1 md:grid-cols-2 gap-8 p-6 sm:p-8">
+        <!-- Foto Produk -->
+        <div class="space-y-4">
+            <div class="aspect-square rounded-2xl overflow-hidden bg-slate-100 border border-slate-200">
+                <img src="{{ url_for('static', filename='uploads/' + product.image_filename) }}" 
+                     alt="{{ product.title }}"
+                     onerror="this.src='https://placehold.co/600x600?text=Foto+Barang'"
+                     class="w-full h-full object-cover">
+            </div>
+        </div>
+
+        <!-- Spesifikasi & Aksi Pemesanan -->
+        <div class="flex flex-col justify-between space-y-6">
+            <div class="space-y-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-100">{{ product.category }}</span>
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 text-slate-700">Kondisi: {{ product.condition }}</span>
+                </div>
+
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight">{{ product.title }}</h1>
+                <p class="text-3xl font-extrabold text-blue-600">Rp {{ "{:,}".format(product.price) }}</p>
+
+                <!-- Box Layanan Jasa Antar -->
+                <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+                    <div class="flex items-center gap-2 text-slate-800 font-bold text-sm">
+                        <i data-lucide="truck" class="w-4 h-4 text-blue-600"></i>
+                        <span>Opsi Pengiriman Penjual</span>
+                    </div>
+                    {% if product.offers_delivery %}
+                        <p class="text-xs text-slate-600">Penjual menyediakan <b>Jasa Antar Langsung</b> dengan tarif flat: <b class="text-slate-900">Rp {{ "{:,}".format(product.delivery_fee) }}</b>.</p>
+                    {% else %}
+                        <p class="text-xs text-amber-700 bg-amber-50 p-2 rounded border border-amber-200">Penjual hanya menyediakan opsi <b>Ambil di Lokasi (Pickup)</b>.</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Deskripsi Barang</h3>
+                    <p class="text-sm text-slate-700 whitespace-pre-line leading-relaxed">{{ product.description }}</p>
+                </div>
+
+                <!-- Info Penjual -->
+                <!-- Info Penjual & Hubungi Langsung -->
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-between flex-wrap gap-3">
+                    <div>
+                        <p class="text-xs text-slate-400 font-medium">Penjual / Pemasar</p>
+                        <p class="text-sm font-bold text-slate-800">{{ product.seller.name }}</p>
+                        <p class="text-xs text-slate-500">{{ product.seller.address or 'Lokasi penjual tidak dicantumkan' }}</p>
+                    </div>
+
+                    {% if product.seller.phone %}
+                    <a href="{{ product.seller.phone | wa_link('Halo ' ~ product.seller.name ~ ', saya tertarik dengan barang bekas: ' ~ product.title) }}"
+                       target="_blank"
+                       class="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm transition">
+                        <i data-lucide="message-circle" class="w-4 h-4"></i> Tanya via WhatsApp
+                    </a>
+                    {% endif %}
+                </div>
+
+            <!-- Tombol Order -->
+            <div>
+                {% if current_user.is_authenticated %}
+                    {% if current_user.id == product.seller_id %}
+                        <div class="p-3 bg-slate-100 text-slate-600 text-xs font-medium rounded-xl text-center">
+                            Ini adalah barang dagangan Anda sendiri.
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('order.checkout', product_id=product.id) }}" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                            <i data-lucide="shopping-bag" class="w-4 h-4"></i> Beli Sekarang & Pesan Antar
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                        Masuk untuk Memesan
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+<!-- Section Ulasan Pelanggan -->
+    <div class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div>
+                <h3 class="text-lg font-bold text-slate-900">Ulasan Pembeli</h3>
+                <p class="text-xs text-slate-500">Testimoni kondisi barang dan layanan pengantaran</p>
+            </div>
+            <span class="text-xs font-semibold bg-slate-100 text-slate-700 px-3 py-1 rounded-full">
+                {{ product.reviews|length }} Ulasan
+            </span>
+        </div>
+
+        {% if product.reviews %}
+            <div class="divide-y divide-slate-100">
+                {% for r in product.reviews %}
+                <div class="py-4 space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-900">{{ r.buyer.name }}</span>
+                        <span class="text-[11px] text-slate-400">{{ r.created_at.strftime('%d %b %Y') }}</span>
+                    </div>
+                    <div class="flex text-amber-400 text-xs">
+                        {% for _ in range(r.rating) %}★{% endfor %}
+                        {% for _ in range(5 - r.rating) %}☆{% endfor %}
+                    </div>
+                    <p class="text-xs text-slate-600 mt-1 leading-relaxed">{{ r.comment or 'Pembeli tidak meninggalkan komentar tertulis.' }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-8">
+                <i data-lucide="message-square-off" class="w-8 h-8 text-slate-300 mx-auto mb-2"></i>
+                <p class="text-xs text-slate-500">Belum ada ulasan untuk barang ini.</p>
+            </div>
+        {% endif %}
+    </div>

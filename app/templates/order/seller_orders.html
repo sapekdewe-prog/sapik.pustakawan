@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Pesanan Masuk & Pengantaran - ThriftMarket{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">Manajemen Pesanan & Jasa Antar</h1>
+            <p class="text-xs text-slate-500 mt-1">Pantau pesanan masuk dan update proses pengiriman langsung ke pembeli.</p>
+        </div>
+        <a href="{{ url_for('seller.dashboard') }}" class="text-xs font-bold text-blue-600 hover:underline">
+            Kelola Etalase Toko
+        </a>
+    </div>
+
+    {% if orders %}
+        <div class="space-y-4">
+            {% for o in orders %}
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 border-b border-slate-100 gap-2">
+                    <div>
+                        <span class="text-xs text-slate-400">Order #{{ o.id }} • {{ o.created_at.strftime('%d %b %Y, %H:%M') }}</span>
+<div class="flex items-center gap-2 mt-0.5">
+    <h3 class="text-sm font-bold text-slate-900">Pembeli: {{ o.buyer.name }}</h3>
+    {% if o.buyer.phone %}
+        <a href="{{ o.buyer.phone | wa_link('Halo ' ~ o.buyer.name ~ ', kurir jasa antar siap mengantar barang: ' ~ o.product.title) }}"
+           target="_blank"
+           class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+            <i data-lucide="message-circle" class="w-3 h-3"></i> Hubungi Penerima
+        </a>
+    {% endif %}
+</div>div>
+                    <div class="flex items-center gap-2">
+                        <!-- Form Update Status Kurir -->
+                        <form method="POST" action="{{ url_for('order.update_status', order_id=o.id) }}" class="flex items-center gap-2">
+                            <select name="status" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold bg-white focus:ring-2 focus:ring-blue-600">
+                                <option value="pending" {% if o.status =='pending' %}selected{% endif %}>Menunggu</option>
+                                <option value="confirmed" {% if o.status =='confirmed' %}selected{% endif %}>Dikonfirmasi</option>
+                                <option value="in_delivery" {% if o.status =='in_delivery' %}selected{% endif %}>Sedang Diantar</option>
+                                <option value="completed" {% if o.status =='completed' %}selected{% endif %}>Selesai / Terkirim</option>
+                                <option value="cancelled" {% if o.status =='cancelled' %}selected{% endif %}>Batalkan</option>
+                            </select>
+                            <button type="submit" class="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-800 transition">
+                                Simpan
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div>
+                        <span class="text-slate-400 font-semibold uppercase">Barang:</span>
+                        <p class="font-bold text-slate-800 text-sm mt-0.5">{{ o.product.title }}</p>
+                        <p class="text-blue-600 font-extrabold mt-1">Total Tagihan: Rp {{ "{:,}".format(o.total_price) }} (Ongkir: Rp {{ "{:,}".format(o.delivery_fee) }})</p>
+                    </div>
+
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                        <span class="font-bold text-slate-800 block">Detail Pengiriman Jasa Antar:</span>
+                        <p class="text-slate-600">Metode: <b class="text-slate-900">{{ 'Jasa Antar' if o.delivery_method == 'seller_delivery' else 'Ambil Sendiri' }}</b></p>
+                        <p class="text-slate-600">Alamat: <b class="text-slate-900">{{ o.shipping_address }}</b></p>
+                        {% if o.notes %}
+                            <p class="text-slate-500 italic">Catatan: "{{ o.notes }}"</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+            <i data-lucide="inbox" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
+            <p class="text-slate-700 font-bold">Belum ada pesanan masuk</p>
+            <p class="text-xs text-slate-400 mt-1">Pesanan pembeli yang menggunakan jasa antarmu akan muncul di sini.</p>
+        </div>
+    {% endif %}
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Pasang Barang Bekas - ThriftMarket{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 border border-slate-200 rounded-2xl shadow-sm">
+    <div class="mb-6">
+        <a href="{{ url_for('seller.dashboard') }}" class="text-xs font-bold text-blue-600 hover:underline inline-flex items-center gap-1 mb-2">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Kembali ke Dashboard
+        </a>
+        <h1 class="text-2xl font-bold text-slate-900">Pasang Iklan Barang Bekas</h1>
+        <p class="text-xs text-slate-500 mt-1">Lengkapi informasi produk dan tentukan opsi pengiriman.</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-5">
+        <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Nama / Judul Barang</label>
+            <input type="text" name="title" required placeholder="Contoh: Jaket Kulit Vintage Size L"
+                class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm">
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Kategori</label>
+                <select name="category" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm bg-white">
+                    <option value="Pakaian">Pakaian / Fashion</option>
+                    <option value="Elektronik">Elektronik & Gadget</option>
+                    <option value="Otomotif">Otomotif & Aksesoris</option>
+                    <option value="Hobi & Koleksi">Hobi & Koleksi</option>
+                    <option value="Furnitur">Furnitur & Rumah</option>
+                    <option value="Lainnya">Lainnya</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Kondisi Fisik</label>
+                <input type="text" name="condition" required placeholder="Contoh: 9/10 Mulus, Like New"
+                    class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm">
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Harga (Rp)</label>
+            <input type="number" name="price" required min="1000" placeholder="150000"
+                class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm">
+        </div>
+
+        <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Deskripsi & Kelengkapan</label>
+            <textarea name="description" rows="4" required placeholder="Jelaskan kondisi minus (jika ada), masa pakai, dan kelengkapan..."
+                class="w-full px-3.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm"></textarea>
+        </div>
+
+        <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Foto Barang</label>
+            <input type="file" name="image" accept="image/*"
+                class="w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+        </div>
+
+        <!-- Box Fitur Pemasaran Jasa Antar -->
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+            <div class="flex items-center justify-between">
+                <div>
+                    <span class="text-sm font-bold text-slate-800">Sediakan Jasa Antar</span>
+                    <p class="text-xs text-slate-500">Aktifkan jika Anda/armada Anda bisa mengantar pesanan ke alamat pembeli.</p>
+                </div>
+                <input type="checkbox" id="offers_delivery" name="offers_delivery" checked
+                    class="w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
+            </div>
+
+            <div id="delivery_fee_wrapper">
+                <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Tarif Ongkos Kirim (Rp)</label>
+                <input type="number" id="delivery_fee" name="delivery_fee" value="10000" min="0"
+                    placeholder="Contoh: 10000"
+                    class="w-full px-3.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm bg-white">
+                <p class="text-[11px] text-slate-400 mt-1">Isi 0 jika gratis ongkir khusus area Anda.</p>
+            </div>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition">
+            Tayangkan Iklan
+        </button>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // JS interaktif: sembunyikan input ongkir jika jasa antar dimatikan
+    const toggleDelivery = document.getElementById('offers_delivery');
+    const feeWrapper = document.getElementById('delivery_fee_wrapper');
+
+    toggleDelivery.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            feeWrapper.style.display = 'block';
+        } else {
+            feeWrapper.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}
